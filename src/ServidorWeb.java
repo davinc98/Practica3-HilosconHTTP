@@ -52,19 +52,25 @@ public class ServidorWeb {
                             SendArchivo(FileName);
                         }
                         System.out.println(FileName);
-                        
+
                     } else if (line.toUpperCase().startsWith("POST")) {
-                        
+
                         StringTokenizer tokens = new StringTokenizer(line);
 
-                        String peticion = gson.toJson(tokens);
-                        System.out.println("Peticion: " + peticion + "\r\n");
+                        String req = tokens.nextToken();
 
-                        String req_a = tokens.nextToken();
-                        //String req = tokens.nextToken();
+                        int i = 0;
+                        while (req != null) {
+                            String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + peticion + "\r\n");
 
-                        System.out.println("Token1: " + req_a + "\r\n");
-                        //System.out.println("Token2: " + req + "\r\n");
+                            try {
+                                req = tokens.nextToken();
+                            } catch (NoSuchElementException e) {
+                                req = null;
+                            }
+                            i++;
+                        }
 
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
@@ -75,10 +81,74 @@ public class ServidorWeb {
                         pw.flush();
                         pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
                         pw.flush();
-                        pw.print("<h3><b>" + req_a + "</b></h3>");
+                        pw.print("<h3><b>RESPUESTA POST SIN ARGUMENTOS EN URL</b></h3>");
                         pw.flush();
                         pw.print("</center></body></html>");
                         pw.flush();
+
+                    } else if (line.toUpperCase().startsWith("PUT")) {
+
+                        StringTokenizer tokens = new StringTokenizer(line);
+
+                        String req = tokens.nextToken();
+
+                        int i = 0;
+                        while (req != null) {
+                            String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + peticion + "\r\n");
+
+                            try {
+                                req = tokens.nextToken();
+                            } catch (NoSuchElementException e) {
+                                req = null;
+                            }
+                            i++;
+                        }
+
+                        //RESPUESTA
+                        pw.println("HTTP/1.0 200 Okay");
+                        pw.flush();
+                        pw.println();
+                        pw.flush();
+                        pw.print("<html><head><title>SERVIDOR WEB");
+                        pw.flush();
+                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
+                        pw.flush();
+                        pw.print("<h3><b>RESPUESTA PUT SIN ARGUMENTOS EN URL</b></h3>");
+                        pw.flush();
+                        pw.print("</center></body></html>");
+                        pw.flush();
+
+                    }else if (line.toUpperCase().startsWith("HEAD")) {
+
+                        StringTokenizer tokens = new StringTokenizer(line);
+
+                        String req = tokens.nextToken();
+                        int i = 0;
+                        while (req != null) {
+                            String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + peticion + "\r\n");
+                            try {
+                                req = tokens.nextToken();
+                            } catch (NoSuchElementException e) {
+                                req = null;
+                            }
+                            i++;
+                        }
+
+                        //RESPUESTA
+                        pw.println("HTTP/1.0 200 Okay");
+                        pw.flush();
+                        pw.println();
+                        pw.flush();
+//                        pw.print("<html><head><title>SERVIDOR WEB");
+//                        pw.flush();
+//                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
+//                        pw.flush();
+//                        pw.print("<h3><b>RESPUESTA HEAD SIN ARGUMENTOS EN URL</b></h3>");
+//                        pw.flush();
+//                        pw.print("</center></body></html>");
+//                        pw.flush();
 
                     }
 
@@ -161,9 +231,9 @@ public class ServidorWeb {
 
         public void SendArchivo(String arg) {
             int indice = arg.indexOf(".");
-            String extension = arg.substring(indice+1, arg.length());
-            System.out.println("Extension de archivo: "+extension);
-            
+            String extension = arg.substring(indice + 1, arg.length());
+            System.out.println("Extension de archivo: " + extension);
+
             try {
                 int b_leidos = 0;
                 BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
@@ -176,8 +246,7 @@ public class ServidorWeb {
                 }
 
                 int tam_archivo = bis2.available();
-                
-                
+
                 /**
                  * ********************************************
                  */
@@ -185,14 +254,14 @@ public class ServidorWeb {
                 sb = sb + "HTTP/1.0 200 ok\n";
                 sb = sb + "Server: JESUS JOSE/1.0 \n";
                 sb = sb + "Date: " + new Date() + " \n";
-                if(extension.equals("pdf")){
+                if (extension.equals("pdf")) {
                     sb = sb + "Content-Type: application/pdf \n";
-                }else if(extension.equals("jpg")){
+                } else if (extension.equals("jpg")) {
                     sb = sb + "Content-Type: image/jpeg \n";
-                }else{
+                } else {
                     sb = sb + "Content-Type: text/html \n";
                 }
-                
+
                 sb = sb + "Content-Length: " + tam_archivo + " \n";
                 sb = sb + "\n";
                 bos.write(sb.getBytes());
