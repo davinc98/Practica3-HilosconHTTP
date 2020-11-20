@@ -9,7 +9,7 @@ public class ServidorWeb {
     public static final int PUERTO = 8000;
     ServerSocket ss;
 
-    Gson gson = new Gson();
+    //Gson gson = new Gson();
 
     class Manejador extends Thread {
 
@@ -61,8 +61,8 @@ public class ServidorWeb {
 
                         int i = 0;
                         while (req != null) {
-                            String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + peticion + "\r\n");
+                            //String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + req + "\r\n");
 
                             try {
                                 req = tokens.nextToken();
@@ -94,8 +94,8 @@ public class ServidorWeb {
 
                         int i = 0;
                         while (req != null) {
-                            String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + peticion + "\r\n");
+                            //String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + req + "\r\n");
 
                             try {
                                 req = tokens.nextToken();
@@ -126,8 +126,8 @@ public class ServidorWeb {
                         String req = tokens.nextToken();
                         int i = 0;
                         while (req != null) {
-                            String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + peticion + "\r\n");
+                            //String peticion = gson.toJson(req);
+                            System.out.println("Token " + i + ":" + req + "\r\n");
                             try {
                                 req = tokens.nextToken();
                             } catch (NoSuchElementException e) {
@@ -155,8 +155,8 @@ public class ServidorWeb {
                 } else if (line.toUpperCase().startsWith("GET")) {
                     StringTokenizer tokens = new StringTokenizer(line, "?");
 
-                    String peticion = gson.toJson(tokens);
-                    System.out.println("Peticion: " + peticion + "\r\n");
+                    //String peticion = gson.toJson(tokens);
+                    System.out.println("Peticion: " + tokens + "\r\n");
 
                     String req_a = tokens.nextToken();
                     String req = tokens.nextToken();
