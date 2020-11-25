@@ -2,14 +2,11 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
-import com.google.gson.*;
 
 public class ServidorWeb {
 
     public static final int PUERTO = 8000;
     ServerSocket ss;
-
-    //Gson gson = new Gson();
 
     class Manejador extends Thread {
 
@@ -52,26 +49,42 @@ public class ServidorWeb {
                             SendArchivo(FileName);
                         }
                         System.out.println(FileName);
-
+                    } else if (line.toUpperCase().startsWith("HEAD")) {
+                        //RESPUESTA
+                        FileName = "";
+                        getArchivo(line);
+                        if (FileName.compareTo("") == 0) {
+                            SendArchivo2("index.htm");
+                        } else {
+                            SendArchivo2(FileName);
+                        }
+                        System.out.println(FileName);
                     } else if (line.toUpperCase().startsWith("POST")) {
-
-                        StringTokenizer tokens = new StringTokenizer(line);
-
-                        String req = tokens.nextToken();
-
-                        int i = 0;
-                        while (req != null) {
-                            //String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + req + "\r\n");
-
-                            try {
-                                req = tokens.nextToken();
-                            } catch (NoSuchElementException e) {
-                                req = null;
+                        String line2="";
+                        int tamano = 0;
+                        boolean b=true;
+                        while(b){
+                            line2 = br.readLine();
+                            System.out.println(line2);
+                            if(line2.length()>16){
+                                if(line2.substring(0,16).equals("Content-Length: "))
+                                    tamano = Integer.valueOf(line2.substring(16));
                             }
-                            i++;
+                            if(line2.equals(""))
+                                b=false;
                         }
-
+                        line2 = "";
+                        b=true;
+                        char aux;
+                        for(int j=0;j<tamano;j++){
+                            aux = (char)br.read();
+                            line2 = line2+String.valueOf(aux);
+                        }
+                        System.out.println(String.valueOf(line2));
+                        if(tamano>0){
+                            System.out.println("Token 0:" + line2 + "\r\n");
+                        }else
+                            line2 = "Sin Parámetros";
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
                         pw.flush();
@@ -81,30 +94,36 @@ public class ServidorWeb {
                         pw.flush();
                         pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
                         pw.flush();
-                        pw.print("<h3><b>RESPUESTA POST SIN ARGUMENTOS EN URL</b></h3>");
+                        pw.print("<h3><b>RESPUESTA POST CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
                         pw.flush();
                         pw.print("</center></body></html>");
                         pw.flush();
-
-                    } else if (line.toUpperCase().startsWith("PUT")) {
-
-                        StringTokenizer tokens = new StringTokenizer(line);
-
-                        String req = tokens.nextToken();
-
-                        int i = 0;
-                        while (req != null) {
-                            //String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + req + "\r\n");
-
-                            try {
-                                req = tokens.nextToken();
-                            } catch (NoSuchElementException e) {
-                                req = null;
+                    } else if (line.toUpperCase().startsWith("DELETE")){
+                        String line2="";
+                        int tamano = 0;
+                        boolean b=true;
+                        while(b){
+                            line2 = br.readLine();
+                            System.out.println(line2);
+                            if(line2.length()>16){
+                                if(line2.substring(0,16).equals("Content-Length: "))
+                                    tamano = Integer.valueOf(line2.substring(16));
                             }
-                            i++;
+                            if(line2.equals(""))
+                                b=false;
                         }
-
+                        line2 = "";
+                        b=true;
+                        char aux;
+                        for(int j=0;j<tamano;j++){
+                            aux = (char)br.read();
+                            line2 = line2+String.valueOf(aux);
+                        }
+                        System.out.println(String.valueOf(line2));
+                        if(tamano>0){
+                            System.out.println("Token 0:" + line2 + "\r\n");
+                        }else
+                            line2 = "Sin Parámetros";
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
                         pw.flush();
@@ -114,42 +133,13 @@ public class ServidorWeb {
                         pw.flush();
                         pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
                         pw.flush();
-                        pw.print("<h3><b>RESPUESTA PUT SIN ARGUMENTOS EN URL</b></h3>");
+                        pw.print("<h3><b>RESPUESTA DELETE CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
                         pw.flush();
                         pw.print("</center></body></html>");
                         pw.flush();
-
-                    }else if (line.toUpperCase().startsWith("HEAD")) {
-
-                        StringTokenizer tokens = new StringTokenizer(line);
-
-                        String req = tokens.nextToken();
-                        int i = 0;
-                        while (req != null) {
-                            //String peticion = gson.toJson(req);
-                            System.out.println("Token " + i + ":" + req + "\r\n");
-                            try {
-                                req = tokens.nextToken();
-                            } catch (NoSuchElementException e) {
-                                req = null;
-                            }
-                            i++;
-                        }
-
-                        //RESPUESTA
-                        pw.println("HTTP/1.0 200 Okay");
-                        pw.flush();
+                    } else {
+                        pw.println("HTTP/1.0 501 Not Implemented");
                         pw.println();
-                        pw.flush();
-//                        pw.print("<html><head><title>SERVIDOR WEB");
-//                        pw.flush();
-//                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
-//                        pw.flush();
-//                        pw.print("<h3><b>RESPUESTA HEAD SIN ARGUMENTOS EN URL</b></h3>");
-//                        pw.flush();
-//                        pw.print("</center></body></html>");
-//                        pw.flush();
-
                     }
 
                 } else if (line.toUpperCase().startsWith("GET")) {
@@ -171,11 +161,29 @@ public class ServidorWeb {
                     pw.flush();
                     pw.print("<html><head><title>SERVIDOR WEB");
                     pw.flush();
-                    pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
+                    pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Respuesta GET, Parametros Obtenidos..</br></h1>");
                     pw.flush();
                     pw.print("<h3><b>" + req + "</b></h3>");
                     pw.flush();
                     pw.print("</center></body></html>");
+                    pw.flush();
+
+                } else if (line.toUpperCase().startsWith("HEAD")) {
+                    StringTokenizer tokens = new StringTokenizer(line, "?");
+
+                    //String peticion = gson.toJson(tokens);
+                    System.out.println("Peticion: " + tokens + "\r\n");
+
+                    String req_a = tokens.nextToken();
+                    String req = tokens.nextToken();
+
+                    System.out.println("Token1: " + req_a + "\r\n");
+                    System.out.println("Token2: " + req + "\r\n");
+
+                    //RESPUESTA
+                    pw.println("HTTP/1.0 200 Okay");
+                    pw.flush();
+                    pw.println();
                     pw.flush();
 
                 } else {
@@ -229,11 +237,47 @@ public class ServidorWeb {
 
         }
 
-        public void SendArchivo(String arg) {
+        public void SendArchivo2(String arg) {
             int indice = arg.indexOf(".");
             String extension = arg.substring(indice + 1, arg.length());
             System.out.println("Extension de archivo: " + extension);
 
+            try {
+                int b_leidos = 0;
+                BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
+                byte[] buf = new byte[1024];
+                int tam_bloque = 0;
+                if (bis2.available() >= 1024) {
+                    tam_bloque = 1024;
+                } else {
+                    bis2.available();
+                }
+                int tam_archivo = bis2.available();
+                String sb = "";
+                sb = sb + "HTTP/1.0 200 ok\n";
+                sb = sb + "Server: JESUS JOSE/1.0 \n";
+                sb = sb + "Date: " + new Date() + " \n";
+                if (extension.equals("pdf")) {
+                    sb = sb + "Content-Type: application/pdf \n";
+                } else if (extension.equals("jpg")) {
+                    sb = sb + "Content-Type: image/jpeg \n";
+                } else {
+                    sb = sb + "Content-Type: text/html \n";
+                }
+                sb = sb + "Content-Length: " + tam_archivo + " \n";
+                sb = sb + "\n";
+                bos.write(sb.getBytes());
+                bos.flush();
+                bis2.close();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+        }
+        public void SendArchivo(String arg) {
+            int indice = arg.indexOf(".");
+            String extension = arg.substring(indice + 1, arg.length());
+            System.out.println("Extension de archivo: " + extension);
             try {
                 int b_leidos = 0;
                 BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
