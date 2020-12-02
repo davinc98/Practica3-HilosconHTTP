@@ -58,7 +58,6 @@ public class ServidorWeb implements Runnable{
                             System.out.println(FileName);
                         } else if (line.toUpperCase().startsWith("HEAD")) {
                             //RESPUESTA
-                            FileName = "";
                             getArchivo(line);
                             if (FileName.compareTo("") == 0) {
                                 SendArchivo2("index.htm");
@@ -93,7 +92,14 @@ public class ServidorWeb implements Runnable{
                             }else
                                 line2 = "Sin Parámetros";
                             //RESPUESTA
-                            pw.println("HTTP/1.0 200 Okay");
+                            getArchivo(line);
+                            if (FileName.compareTo("") == 0) {
+                                SendArchivo("index.htm");
+                            } else {
+                                SendArchivo(FileName);
+                            }
+                            System.out.println(FileName);
+                            /*pw.println("HTTP/1.0 200 Okay");
                             pw.flush();
                             pw.println();
                             pw.flush();
@@ -104,14 +110,14 @@ public class ServidorWeb implements Runnable{
                             pw.print("<h3><b>RESPUESTA POST CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
                             pw.flush();
                             pw.print("</center></body></html>");
-                            pw.flush();
+                            pw.flush();*/
                         } else if (line.toUpperCase().startsWith("DELETE")){
                             String line2="";
                             int tamano = 0;
                             boolean b=true;
                             while(b){
                                 line2 = br.readLine();
-                                System.out.println(line2);
+                                //System.out.println(line2);
                                 if(line2.length()>16){
                                     if(line2.substring(0,16).equals("Content-Length: "))
                                         tamano = Integer.valueOf(line2.substring(16));
@@ -132,7 +138,15 @@ public class ServidorWeb implements Runnable{
                             }else
                                 line2 = "Sin Parámetros";
                             //RESPUESTA
-                            pw.println("HTTP/1.0 200 Okay");
+                            FileName = "";
+                            getArchivo(line);
+                            if (FileName.compareTo("") == 0) {
+                                SendArchivo2("index.htm");
+                            } else {
+                                SendArchivo2(FileName);
+                            }
+                            System.out.println(FileName);
+                            /*pw.println("HTTP/1.0 200 Okay");
                             pw.flush();
                             pw.println();
                             pw.flush();
@@ -143,7 +157,7 @@ public class ServidorWeb implements Runnable{
                             pw.print("<h3><b>RESPUESTA DELETE CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
                             pw.flush();
                             pw.print("</center></body></html>");
-                            pw.flush();
+                            pw.flush();*/
                         } else {
                             pw.println("HTTP/1.0 501 Not Implemented");
                             pw.println();
@@ -220,11 +234,11 @@ public class ServidorWeb implements Runnable{
         public void getArchivo(String line) {
             int i;
             int f;
-            if (line.toUpperCase().startsWith("GET")) {
+            //if (line.toUpperCase().startsWith("GET")) {
                 i = line.indexOf("/");
                 f = line.indexOf(" ", i);
                 FileName = line.substring(i + 1, f);
-            }
+            //}
         }
 
         public void SendArchivo(String fileName, Socket sc) {
