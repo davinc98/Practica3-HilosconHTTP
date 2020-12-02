@@ -2,196 +2,211 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ServidorWeb {
+public class ServidorWeb implements Runnable{
 
-    public static final int PUERTO = 8000;
-    ServerSocket ss;
+    protected int puerto = 9000;
+    protected ServerSocket ss = null;
+    protected boolean      detenido    = false;
+    protected Thread       runningThread= null;
+    protected ExecutorService pool = Executors.newFixedThreadPool(2);
 
     class Manejador extends Thread {
 
-        protected Socket socket;
-        protected PrintWriter pw;
-        protected BufferedOutputStream bos;
+        protected Socket socket = null;
         protected BufferedReader br;
+        protected BufferedOutputStream bos;
+        protected PrintWriter pw;
         protected String FileName;
 
-        public Manejador(Socket _socket) throws Exception {
+        public Manejador(Socket _socket){
             this.socket = _socket;
         }
 
         public void run() {
-
             try {
                 br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 bos = new BufferedOutputStream(socket.getOutputStream());
                 pw = new PrintWriter(new OutputStreamWriter(bos));
-                String line = br.readLine();
+                
+                while(true){
+                
+                    String line = br.readLine();
 
-                if (line == null) {
-                    pw.print("<html><head><title>Servidor WEB");
-                    pw.print("</title><body bgcolor=\"#AACCFF\"<br>Linea Vacia</br>");
-                    pw.print("</body></html>");
-                    socket.close();
-                    return;
-                }
-                System.out.println("\nCliente Conectado desde: " + socket.getInetAddress());
-                System.out.println("Por el puerto: " + socket.getPort());
-                System.out.println("Datos: " + line + "\r\n\r\n");
+                    if (line == null) {
+                        pw.print("<html><head><title>Servidor WEB");
+                        pw.print("</title><body bgcolor=\"#AACCFF\"<br>Linea Vacia</br>");
+                        pw.print("</body></html>");
+                        socket.close();
+                        return;
+                    }
+                    System.out.println("\nCliente Conectado desde: " + socket.getInetAddress());
+                    System.out.println("Por el puerto: " + socket.getPort());
+                    System.out.println("Datos: " + line + "\r\n\r\n");
 
-                if (line.indexOf("?") == -1) {//Si no tiene parametros en la URL
+                    if (line.indexOf("?") == -1) {//Si no tiene parametros en la URL
 
-                    if (line.toUpperCase().startsWith("GET")) {
-                        getArchivo(line);
-                        if (FileName.compareTo("") == 0) {
-                            SendArchivo("index.htm");
+                        if (line.toUpperCase().startsWith("GET")) {
+                            getArchivo(line);
+                            if (FileName.compareTo("") == 0) {
+                                SendArchivo("index.htm");
+                            } else {
+                                SendArchivo(FileName);
+                            }
+                            System.out.println(FileName);
+                        } else if (line.toUpperCase().startsWith("HEAD")) {
+                            //RESPUESTA
+                            FileName = "";
+                            getArchivo(line);
+                            if (FileName.compareTo("") == 0) {
+                                SendArchivo2("index.htm");
+                            } else {
+                                SendArchivo2(FileName);
+                            }
+                            System.out.println(FileName);
+                        } else if (line.toUpperCase().startsWith("POST")) {
+                            String line2="";
+                            int tamano = 0;
+                            boolean b=true;
+                            while(b){
+                                line2 = br.readLine();
+                                System.out.println(line2);
+                                if(line2.length()>16){
+                                    if(line2.substring(0,16).equals("Content-Length: "))
+                                        tamano = Integer.valueOf(line2.substring(16));
+                                }
+                                if(line2.equals(""))
+                                    b=false;
+                            }
+                            line2 = "";
+                            b=true;
+                            char aux;
+                            for(int j=0;j<tamano;j++){
+                                aux = (char)br.read();
+                                line2 = line2+String.valueOf(aux);
+                            }
+                            System.out.println(String.valueOf(line2));
+                            if(tamano>0){
+                                System.out.println("Token 0:" + line2 + "\r\n");
+                            }else
+                                line2 = "Sin Parámetros";
+                            //RESPUESTA
+                            pw.println("HTTP/1.0 200 Okay");
+                            pw.flush();
+                            pw.println();
+                            pw.flush();
+                            pw.print("<html><head><title>SERVIDOR WEB");
+                            pw.flush();
+                            pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
+                            pw.flush();
+                            pw.print("<h3><b>RESPUESTA POST CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
+                            pw.flush();
+                            pw.print("</center></body></html>");
+                            pw.flush();
+                        } else if (line.toUpperCase().startsWith("DELETE")){
+                            String line2="";
+                            int tamano = 0;
+                            boolean b=true;
+                            while(b){
+                                line2 = br.readLine();
+                                System.out.println(line2);
+                                if(line2.length()>16){
+                                    if(line2.substring(0,16).equals("Content-Length: "))
+                                        tamano = Integer.valueOf(line2.substring(16));
+                                }
+                                if(line2.equals(""))
+                                    b=false;
+                            }
+                            line2 = "";
+                            b=true;
+                            char aux;
+                            for(int j=0;j<tamano;j++){
+                                aux = (char)br.read();
+                                line2 = line2+String.valueOf(aux);
+                            }
+                            System.out.println(String.valueOf(line2));
+                            if(tamano>0){
+                                System.out.println("Token 0:" + line2 + "\r\n");
+                            }else
+                                line2 = "Sin Parámetros";
+                            //RESPUESTA
+                            pw.println("HTTP/1.0 200 Okay");
+                            pw.flush();
+                            pw.println();
+                            pw.flush();
+                            pw.print("<html><head><title>SERVIDOR WEB");
+                            pw.flush();
+                            pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
+                            pw.flush();
+                            pw.print("<h3><b>RESPUESTA DELETE CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
+                            pw.flush();
+                            pw.print("</center></body></html>");
+                            pw.flush();
                         } else {
-                            SendArchivo(FileName);
+                            pw.println("HTTP/1.0 501 Not Implemented");
+                            pw.println();
                         }
-                        System.out.println(FileName);
+
+                    } else if (line.toUpperCase().startsWith("GET")) {
+                        StringTokenizer tokens = new StringTokenizer(line, "?");
+
+                        //String peticion = gson.toJson(tokens);
+                        System.out.println("Peticion: " + tokens + "\r\n");
+
+                        String req_a = tokens.nextToken();
+                        String req = tokens.nextToken();
+
+                        System.out.println("Token1: " + req_a + "\r\n");
+                        System.out.println("Token2: " + req + "\r\n");
+
+                        //RESPUESTA
+                        pw.println("HTTP/1.0 200 Okay");
+                        pw.flush();
+                        pw.println();
+                        pw.flush();
+                        pw.print("<html><head><title>SERVIDOR WEB");
+                        pw.flush();
+                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Respuesta GET, Parametros Obtenidos..</br></h1>");
+                        pw.flush();
+                        pw.print("<h3><b>" + req + "</b></h3>");
+                        pw.flush();
+                        pw.print("</center></body></html>");
+                        pw.flush();
+
                     } else if (line.toUpperCase().startsWith("HEAD")) {
-                        //RESPUESTA
-                        FileName = "";
-                        getArchivo(line);
-                        if (FileName.compareTo("") == 0) {
-                            SendArchivo2("index.htm");
-                        } else {
-                            SendArchivo2(FileName);
-                        }
-                        System.out.println(FileName);
-                    } else if (line.toUpperCase().startsWith("POST")) {
-                        String line2="";
-                        int tamano = 0;
-                        boolean b=true;
-                        while(b){
-                            line2 = br.readLine();
-                            System.out.println(line2);
-                            if(line2.length()>16){
-                                if(line2.substring(0,16).equals("Content-Length: "))
-                                    tamano = Integer.valueOf(line2.substring(16));
-                            }
-                            if(line2.equals(""))
-                                b=false;
-                        }
-                        line2 = "";
-                        b=true;
-                        char aux;
-                        for(int j=0;j<tamano;j++){
-                            aux = (char)br.read();
-                            line2 = line2+String.valueOf(aux);
-                        }
-                        System.out.println(String.valueOf(line2));
-                        if(tamano>0){
-                            System.out.println("Token 0:" + line2 + "\r\n");
-                        }else
-                            line2 = "Sin Parámetros";
+                        StringTokenizer tokens = new StringTokenizer(line, "?");
+
+                        //String peticion = gson.toJson(tokens);
+                        System.out.println("Peticion: " + tokens + "\r\n");
+
+                        String req_a = tokens.nextToken();
+                        String req = tokens.nextToken();
+
+                        System.out.println("Token1: " + req_a + "\r\n");
+                        System.out.println("Token2: " + req + "\r\n");
+
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
                         pw.flush();
                         pw.println();
                         pw.flush();
-                        pw.print("<html><head><title>SERVIDOR WEB");
-                        pw.flush();
-                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
-                        pw.flush();
-                        pw.print("<h3><b>RESPUESTA POST CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
-                        pw.flush();
-                        pw.print("</center></body></html>");
-                        pw.flush();
-                    } else if (line.toUpperCase().startsWith("DELETE")){
-                        String line2="";
-                        int tamano = 0;
-                        boolean b=true;
-                        while(b){
-                            line2 = br.readLine();
-                            System.out.println(line2);
-                            if(line2.length()>16){
-                                if(line2.substring(0,16).equals("Content-Length: "))
-                                    tamano = Integer.valueOf(line2.substring(16));
-                            }
-                            if(line2.equals(""))
-                                b=false;
-                        }
-                        line2 = "";
-                        b=true;
-                        char aux;
-                        for(int j=0;j<tamano;j++){
-                            aux = (char)br.read();
-                            line2 = line2+String.valueOf(aux);
-                        }
-                        System.out.println(String.valueOf(line2));
-                        if(tamano>0){
-                            System.out.println("Token 0:" + line2 + "\r\n");
-                        }else
-                            line2 = "Sin Parámetros";
-                        //RESPUESTA
-                        pw.println("HTTP/1.0 200 Okay");
-                        pw.flush();
-                        pw.println();
-                        pw.flush();
-                        pw.print("<html><head><title>SERVIDOR WEB");
-                        pw.flush();
-                        pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
-                        pw.flush();
-                        pw.print("<h3><b>RESPUESTA DELETE CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
-                        pw.flush();
-                        pw.print("</center></body></html>");
-                        pw.flush();
+
                     } else {
                         pw.println("HTTP/1.0 501 Not Implemented");
                         pw.println();
                     }
-
-                } else if (line.toUpperCase().startsWith("GET")) {
-                    StringTokenizer tokens = new StringTokenizer(line, "?");
-
-                    //String peticion = gson.toJson(tokens);
-                    System.out.println("Peticion: " + tokens + "\r\n");
-
-                    String req_a = tokens.nextToken();
-                    String req = tokens.nextToken();
-
-                    System.out.println("Token1: " + req_a + "\r\n");
-                    System.out.println("Token2: " + req + "\r\n");
-
-                    //RESPUESTA
-                    pw.println("HTTP/1.0 200 Okay");
                     pw.flush();
-                    pw.println();
-                    pw.flush();
-                    pw.print("<html><head><title>SERVIDOR WEB");
-                    pw.flush();
-                    pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Respuesta GET, Parametros Obtenidos..</br></h1>");
-                    pw.flush();
-                    pw.print("<h3><b>" + req + "</b></h3>");
-                    pw.flush();
-                    pw.print("</center></body></html>");
-                    pw.flush();
-
-                } else if (line.toUpperCase().startsWith("HEAD")) {
-                    StringTokenizer tokens = new StringTokenizer(line, "?");
-
-                    //String peticion = gson.toJson(tokens);
-                    System.out.println("Peticion: " + tokens + "\r\n");
-
-                    String req_a = tokens.nextToken();
-                    String req = tokens.nextToken();
-
-                    System.out.println("Token1: " + req_a + "\r\n");
-                    System.out.println("Token2: " + req + "\r\n");
-
-                    //RESPUESTA
-                    pw.println("HTTP/1.0 200 Okay");
-                    pw.flush();
-                    pw.println();
-                    pw.flush();
-
-                } else {
-                    pw.println("HTTP/1.0 501 Not Implemented");
-                    pw.println();
+                    bos.flush();
+                    boolean seguir = true;
+                    while(seguir){
+                        line = br.readLine();
+                        //System.out.println(line);
+                        if(line==null)
+                            seguir = false;
+                    }
                 }
-                pw.flush();
-                bos.flush();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -326,7 +341,7 @@ public class ServidorWeb {
                 }
                 bos.flush();
                 bis2.close();
-
+            
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -334,19 +349,58 @@ public class ServidorWeb {
         }
     }
 
-    public ServidorWeb() throws Exception {
-        System.out.println("Iniciando Servidor.......");
-        this.ss = new ServerSocket(PUERTO);
-        System.out.println("Servidor iniciado:---OK");
-        System.out.println("Esperando por Cliente....");
-        for (;;) {
-            Socket accept = ss.accept();
-            new Manejador(accept).start();
+    public ServidorWeb(int puerto){
+        this.puerto = puerto;
+    }
+
+    public void run(){
+        synchronized(this){
+            this.runningThread = Thread.currentThread();
+        }
+        iniciaServidor();
+        while(! detenido()){
+            Socket cl = null;
+            try {
+                cl = this.ss.accept();
+                System.out.println("Conexion aceptada..");
+            } catch (IOException e) {
+                if(detenido()) {
+                    System.out.println("Servidor detenido.") ;
+                    break;
+                }throw new RuntimeException("Error al aceptar nueva conexion", e);
+            }//catch
+            this.pool.execute(new Manejador(cl));
+        }//while
+        this.pool.shutdown();
+        System.out.println("Servidor detenido.") ;
+    }
+
+
+    private synchronized boolean detenido() {
+        return this.detenido;
+    }
+
+    public synchronized void stop(){
+        this.detenido = true;
+        try {
+            this.ss.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error al cerrar el socket del servidor", e);
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        ServidorWeb sWEB = new ServidorWeb();
+    private void iniciaServidor() {
+        try {
+            this.ss = new ServerSocket(this.puerto);
+            System.out.println("Servicio iniciado.. esperando cliente..");
+        } catch (IOException e) {
+            throw new RuntimeException("No puede iniciar el socket en el puerto: "+ss.getLocalPort(), e);
+        }
     }
+
+    public static void main(String[] args){
+        ServidorWeb server = new ServidorWeb(8000);
+        new Thread(server).start();
+    }//main
 
 }
