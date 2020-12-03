@@ -4,37 +4,31 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServidorWeb implements Runnable{
-
     protected int puerto = 9000;
     protected ServerSocket ss = null;
     protected boolean      detenido    = false;
     protected Thread       runningThread= null;
     protected ExecutorService pool = Executors.newFixedThreadPool(2);
-
     class Manejador extends Thread {
-
         protected Socket socket = null;
         protected BufferedReader br;
         protected BufferedOutputStream bos;
         protected PrintWriter pw;
         protected String FileName;
-
         public Manejador(Socket _socket){
             this.socket = _socket;
         }
-
         public void run() {
             try {
                 br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 bos = new BufferedOutputStream(socket.getOutputStream());
                 pw = new PrintWriter(new OutputStreamWriter(bos));
-                
                 while(true){
-                
                     String line = br.readLine();
-
                     if (line == null) {
                         pw.print("<html><head><title>Servidor WEB");
                         pw.print("</title><body bgcolor=\"#AACCFF\"<br>Linea Vacia</br>");
@@ -45,9 +39,7 @@ public class ServidorWeb implements Runnable{
                     System.out.println("\nCliente Conectado desde: " + socket.getInetAddress());
                     System.out.println("Por el puerto: " + socket.getPort());
                     System.out.println("Datos: " + line + "\r\n\r\n");
-
                     if (line.indexOf("?") == -1) {//Si no tiene parametros en la URL
-
                         if (line.toUpperCase().startsWith("GET")) {
                             getArchivo(line);
                             if (FileName.compareTo("") == 0) {
@@ -99,25 +91,12 @@ public class ServidorWeb implements Runnable{
                                 SendArchivo(FileName);
                             }
                             System.out.println(FileName);
-                            /*pw.println("HTTP/1.0 200 Okay");
-                            pw.flush();
-                            pw.println();
-                            pw.flush();
-                            pw.print("<html><head><title>SERVIDOR WEB");
-                            pw.flush();
-                            pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
-                            pw.flush();
-                            pw.print("<h3><b>RESPUESTA POST CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
-                            pw.flush();
-                            pw.print("</center></body></html>");
-                            pw.flush();*/
                         } else if (line.toUpperCase().startsWith("DELETE")){
                             String line2="";
                             int tamano = 0;
                             boolean b=true;
                             while(b){
                                 line2 = br.readLine();
-                                //System.out.println(line2);
                                 if(line2.length()>16){
                                     if(line2.substring(0,16).equals("Content-Length: "))
                                         tamano = Integer.valueOf(line2.substring(16));
@@ -146,18 +125,6 @@ public class ServidorWeb implements Runnable{
                                 SendArchivo2(FileName);
                             }
                             System.out.println(FileName);
-                            /*pw.println("HTTP/1.0 200 Okay");
-                            pw.flush();
-                            pw.println();
-                            pw.flush();
-                            pw.print("<html><head><title>SERVIDOR WEB");
-                            pw.flush();
-                            pw.print("</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>Parametros Obtenidos..</br></h1>");
-                            pw.flush();
-                            pw.print("<h3><b>RESPUESTA DELETE CON LOS PARÁMETROS "+line2+" EN URL</b></h3>");
-                            pw.flush();
-                            pw.print("</center></body></html>");
-                            pw.flush();*/
                         } else {
                             pw.println("HTTP/1.0 501 Not Implemented");
                             pw.println();
@@ -165,16 +132,11 @@ public class ServidorWeb implements Runnable{
 
                     } else if (line.toUpperCase().startsWith("GET")) {
                         StringTokenizer tokens = new StringTokenizer(line, "?");
-
-                        //String peticion = gson.toJson(tokens);
                         System.out.println("Peticion: " + tokens + "\r\n");
-
                         String req_a = tokens.nextToken();
                         String req = tokens.nextToken();
-
                         System.out.println("Token1: " + req_a + "\r\n");
                         System.out.println("Token2: " + req + "\r\n");
-
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
                         pw.flush();
@@ -188,25 +150,18 @@ public class ServidorWeb implements Runnable{
                         pw.flush();
                         pw.print("</center></body></html>");
                         pw.flush();
-
                     } else if (line.toUpperCase().startsWith("HEAD")) {
                         StringTokenizer tokens = new StringTokenizer(line, "?");
-
-                        //String peticion = gson.toJson(tokens);
                         System.out.println("Peticion: " + tokens + "\r\n");
-
                         String req_a = tokens.nextToken();
                         String req = tokens.nextToken();
-
                         System.out.println("Token1: " + req_a + "\r\n");
                         System.out.println("Token2: " + req + "\r\n");
-
                         //RESPUESTA
                         pw.println("HTTP/1.0 200 Okay");
                         pw.flush();
                         pw.println();
                         pw.flush();
-
                     } else {
                         pw.println("HTTP/1.0 501 Not Implemented");
                         pw.println();
@@ -230,7 +185,6 @@ public class ServidorWeb implements Runnable{
                 e.printStackTrace();
             }
         }
-
         public void getArchivo(String line) {
             int i;
             int f;
@@ -240,14 +194,12 @@ public class ServidorWeb implements Runnable{
                 FileName = line.substring(i + 1, f);
             //}
         }
-
         public void SendArchivo(String fileName, Socket sc) {
             //System.out.println(fileName);
             int fSize = 0;
             byte[] buffer = new byte[4096];
             try {
                 DataOutputStream out = new DataOutputStream(sc.getOutputStream());
-
                 //sendHeader();
                 FileInputStream f = new FileInputStream(fileName);
                 int x = 0;
@@ -263,103 +215,107 @@ public class ServidorWeb implements Runnable{
                 //			System.out.println(e.getMessage());
                 //msg.printErr("Transaction::sendResponse():2", "Error en la lectura del archivo: " + fileName);
             }
-
         }
 
         public void SendArchivo2(String arg) {
             int indice = arg.indexOf(".");
             String extension = arg.substring(indice + 1, arg.length());
             System.out.println("Extension de archivo: " + extension);
-
             try {
-                int b_leidos = 0;
-                BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
-                byte[] buf = new byte[1024];
-                int tam_bloque = 0;
-                if (bis2.available() >= 1024) {
-                    tam_bloque = 1024;
-                } else {
-                    bis2.available();
+                File f = new File(arg);
+                if(!f.exists()){
+                    System.out.println("El recurso solicitado no existe");
+                    String sb= "";
+                    sb=sb+"HTTP/1.0 404 Recurso no encontrado\n";
+                    sb=sb+"Server: JESUS JOSE/1.0\n";
+                    sb=sb+"Date: " + new Date() + " \n\n";
+                    bos.write(sb.getBytes());
+                    bos.flush();
+                }else{
+                    int b_leidos = 0;
+                    BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
+                    byte[] buf = new byte[1024];
+                    int tam_bloque = 0;
+                    if (bis2.available() >= 1024) {
+                        tam_bloque = 1024;
+                    } else {
+                        bis2.available();
+                    }
+                    int tam_archivo = bis2.available();
+                    String sb = "";
+                    sb = sb + "HTTP/1.0 200 ok\n";
+                    sb = sb + "Server: JESUS JOSE/1.0 \n";
+                    sb = sb + "Date: " + new Date() + " \n";
+                    if (extension.equals("pdf")) {
+                        sb = sb + "Content-Type: application/pdf \n";
+                    } else if (extension.equals("jpg")) {
+                        sb = sb + "Content-Type: image/jpeg \n";
+                    } else {
+                        sb = sb + "Content-Type: text/html \n";
+                    }
+                    sb = sb + "Content-Length: " + tam_archivo + " \n";
+                    sb = sb + "\n";
+                    bos.write(sb.getBytes());
+                    bos.flush();
+                    bis2.close();
                 }
-                int tam_archivo = bis2.available();
-                String sb = "";
-                sb = sb + "HTTP/1.0 200 ok\n";
-                sb = sb + "Server: JESUS JOSE/1.0 \n";
-                sb = sb + "Date: " + new Date() + " \n";
-                if (extension.equals("pdf")) {
-                    sb = sb + "Content-Type: application/pdf \n";
-                } else if (extension.equals("jpg")) {
-                    sb = sb + "Content-Type: image/jpeg \n";
-                } else {
-                    sb = sb + "Content-Type: text/html \n";
-                }
-                sb = sb + "Content-Length: " + tam_archivo + " \n";
-                sb = sb + "\n";
-                bos.write(sb.getBytes());
-                bos.flush();
-                bis2.close();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-
         }
         public void SendArchivo(String arg) {
             int indice = arg.indexOf(".");
             String extension = arg.substring(indice + 1, arg.length());
             System.out.println("Extension de archivo: " + extension);
             try {
-                int b_leidos = 0;
-                BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
-                byte[] buf = new byte[1024];
-                int tam_bloque = 0;
-                if (bis2.available() >= 1024) {
-                    tam_bloque = 1024;
-                } else {
-                    bis2.available();
+                File f = new File(arg);
+                if(!f.exists()){
+                    System.out.println("El recurso solicitado no existe: "+arg);
+                    String sb= "";
+                    sb=sb+"HTTP/1.0 404 Recurso no encontrado\n";
+                    sb=sb+"Server: JESUS JOSE/1.0\n";
+                    sb=sb+"Date: " + new Date() + " \n";
+                    sb=sb+"Content-Type: text/html \n";
+                    sb=sb+"\n<html><head><title>SERVIDOR WEB\n";
+                    sb=sb+"</title></head><body bgcolor=\"#AACCFF\"><center><h1><br>El recurso solicitado no se ha encontrado en el servidor, error 404</br></h1>";
+                    sb=sb+"</center></body></html>\n";
+                    bos.write(sb.getBytes());
+                    bos.flush();
+                }else{
+                    int b_leidos = 0;
+                    BufferedInputStream bis2 = new BufferedInputStream(new FileInputStream(arg));
+                    byte[] buf = new byte[1024];
+                    int tam_bloque = 0;
+                    if (bis2.available() >= 1024) {
+                        tam_bloque = 1024;
+                    } else {
+                        bis2.available();
+                    }
+                    int tam_archivo = bis2.available();
+                    String sb = "";
+                    sb = sb + "HTTP/1.0 200 ok\n";
+                    sb = sb + "Server: JESUS JOSE/1.0 \n";
+                    sb = sb + "Date: " + new Date() + " \n";
+                    if (extension.equals("pdf")) {
+                        sb = sb + "Content-Type: application/pdf \n";
+                    } else if (extension.equals("jpg")) {
+                        sb = sb + "Content-Type: image/jpeg \n";
+                    } else {
+                        sb = sb + "Content-Type: text/html \n";
+                    }
+                    sb = sb + "Content-Length: " + tam_archivo + " \n";
+                    sb = sb + "\n";
+                    bos.write(sb.getBytes());
+                    bos.flush();
+                    while ((b_leidos = bis2.read(buf, 0, buf.length)) != -1) {
+                        bos.write(buf, 0, b_leidos);
+                    }
+                    bos.flush();
+                    bis2.close();
                 }
-
-                int tam_archivo = bis2.available();
-
-                /**
-                 * ********************************************
-                 */
-                String sb = "";
-                sb = sb + "HTTP/1.0 200 ok\n";
-                sb = sb + "Server: JESUS JOSE/1.0 \n";
-                sb = sb + "Date: " + new Date() + " \n";
-                if (extension.equals("pdf")) {
-                    sb = sb + "Content-Type: application/pdf \n";
-                } else if (extension.equals("jpg")) {
-                    sb = sb + "Content-Type: image/jpeg \n";
-                } else {
-                    sb = sb + "Content-Type: text/html \n";
-                }
-
-                sb = sb + "Content-Length: " + tam_archivo + " \n";
-                sb = sb + "\n";
-                bos.write(sb.getBytes());
-                bos.flush();
-
-                //out.println("HTTP/1.0 200 ok");
-                //out.println("Server: Axel Server/1.0");
-                //out.println("Date: " + new Date());
-                //out.println("Content-Type: text/html");
-                //out.println("Content-Length: " + mifichero.length());
-                //out.println("\n");
-                /**
-                 * ********************************************
-                 */
-                while ((b_leidos = bis2.read(buf, 0, buf.length)) != -1) {
-                    bos.write(buf, 0, b_leidos);
-
-                }
-                bos.flush();
-                bis2.close();
-            
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-
         }
     }
 
@@ -388,12 +344,9 @@ public class ServidorWeb implements Runnable{
         this.pool.shutdown();
         System.out.println("Servidor detenido.") ;
     }
-
-
     private synchronized boolean detenido() {
         return this.detenido;
     }
-
     public synchronized void stop(){
         this.detenido = true;
         try {
@@ -402,7 +355,6 @@ public class ServidorWeb implements Runnable{
             throw new RuntimeException("Error al cerrar el socket del servidor", e);
         }
     }
-
     private void iniciaServidor() {
         try {
             this.ss = new ServerSocket(this.puerto);
@@ -411,10 +363,8 @@ public class ServidorWeb implements Runnable{
             throw new RuntimeException("No puede iniciar el socket en el puerto: "+ss.getLocalPort(), e);
         }
     }
-
     public static void main(String[] args){
         ServidorWeb server = new ServidorWeb(8000);
         new Thread(server).start();
     }//main
-
 }
