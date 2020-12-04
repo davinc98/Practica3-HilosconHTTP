@@ -12,7 +12,7 @@ public class ServidorWeb implements Runnable{
     protected ServerSocket ss = null;
     protected boolean      detenido    = false;
     protected Thread       runningThread= null;
-    protected ExecutorService pool = Executors.newFixedThreadPool(2);
+    protected ExecutorService pool = Executors.newFixedThreadPool(100);
     class Manejador extends Thread {
         protected Socket socket = null;
         protected BufferedReader br;
@@ -123,6 +123,8 @@ public class ServidorWeb implements Runnable{
                                 SendArchivo2("index.htm");
                             } else {
                                 SendArchivo2(FileName);
+                                File f = new File(FileName);
+                                f.delete();
                             }
                             System.out.println(FileName);
                         } else {
